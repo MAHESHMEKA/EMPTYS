@@ -73,14 +73,13 @@ def _check(df, columns=None):
 
 def plot_outliers(df):
     """Visualizes outliers in the DataFrame."""
-    outliers_dict = _check(df)  # Detect outliers
+    outliers_dict = _check(df)
     plt.figure(figsize=(12, 6))
     for i, column in enumerate(outliers_dict.keys(), start=1):
         plt.subplot(2, 3, i)
         sns.boxplot(data=df[column])
         plt.title(f'Outliers in {column}')
 
-        # Highlight the outliers
         outlier_indices = outliers_dict[column]['indices']
         outlier_values = df.loc[outlier_indices, column]
         plt.scatter(outlier_indices, outlier_values, color='red', label='Outliers', zorder=5)
@@ -98,14 +97,12 @@ def fill_outliers_with_mean(df, columns=None):
         print("The DataFrame is empty.")
         return df
 
-    # If columns is a string, convert it to a list
     if isinstance(columns, str):
         columns = [columns]
     
     df_copy = df.copy()
     
     if columns is None:
-        # Select only numeric columns if no specific columns are provided
         columns = df_copy.select_dtypes(include=['number']).columns
     
     for column in columns:
@@ -116,10 +113,8 @@ def fill_outliers_with_mean(df, columns=None):
             lower_bound = Q1 - 1.5 * IQR
             upper_bound = Q3 + 1.5 * IQR
             
-            # Calculate the mean excluding nulls and outliers
             mean_value = df_copy[(df_copy[column] >= lower_bound) & (df_copy[column] <= upper_bound)][column].mean()
             
-            # Replace outliers with the calculated mean
             df_copy[column] = np.where((df_copy[column] < lower_bound) | (df_copy[column] > upper_bound), mean_value, df_copy[column])
     
     return df_copy
@@ -130,14 +125,12 @@ def fill_outliers_with_median(df, columns=None):
         print("The DataFrame is empty.")
         return df
 
-    # If columns is a string, convert it to a list
     if isinstance(columns, str):
         columns = [columns]
     
     df_copy = df.copy()
     
     if columns is None:
-        # Select only numeric columns if no specific columns are provided
         columns = df_copy.select_dtypes(include=['number']).columns
     
     for column in columns:
@@ -148,10 +141,8 @@ def fill_outliers_with_median(df, columns=None):
             lower_bound = Q1 - 1.5 * IQR
             upper_bound = Q3 + 1.5 * IQR
             
-            # Calculate the median excluding nulls and outliers
             median_value = df_copy[(df_copy[column] >= lower_bound) & (df_copy[column] <= upper_bound)][column].median()
             
-            # Replace outliers with the calculated median
             df_copy[column] = np.where((df_copy[column] < lower_bound) | (df_copy[column] > upper_bound), median_value, df_copy[column])
     
     return df_copy
@@ -162,14 +153,12 @@ def fill_outliers_with_mode(df, columns=None):
         print("The DataFrame is empty.")
         return df
 
-    # If columns is a string, convert it to a list
     if isinstance(columns, str):
         columns = [columns]
     
     df_copy = df.copy()
     
     if columns is None:
-        # Select only numeric columns if no specific columns are provided
         columns = df_copy.select_dtypes(include=['number']).columns
     
     for column in columns:
@@ -180,11 +169,9 @@ def fill_outliers_with_mode(df, columns=None):
             lower_bound = Q1 - 1.5 * IQR
             upper_bound = Q3 + 1.5 * IQR
             
-            # Calculate the mode excluding nulls and outliers
             mode_value = df_copy[(df_copy[column] >= lower_bound) & (df_copy[column] <= upper_bound)][column].mode()
-            mode_value = mode_value[0] if not mode_value.empty else np.nan  # Get the first mode or NaN if empty
+            mode_value = mode_value[0] if not mode_value.empty else np.nan
             
-            # Replace outliers with the calculated mode
             df_copy[column] = np.where((df_copy[column] < lower_bound) | (df_copy[column] > upper_bound), mode_value, df_copy[column])
     
     return df_copy
@@ -195,14 +182,12 @@ def fill_outliers_with_random_values(df, columns=None):
         print("The DataFrame is empty.")
         return df
 
-    # If columns is a string, convert it to a list
     if isinstance(columns, str):
         columns = [columns]
     
     df_copy = df.copy()
     
     if columns is None:
-        # Select only numeric columns if no specific columns are provided
         columns = df_copy.select_dtypes(include=['number']).columns
     
     for column in columns:
@@ -213,10 +198,8 @@ def fill_outliers_with_random_values(df, columns=None):
             lower_bound = Q1 - 1.5 * IQR
             upper_bound = Q3 + 1.5 * IQR
             
-            # Identify non-outlier values
             non_outliers = df_copy[(df_copy[column] >= lower_bound) & (df_copy[column] <= upper_bound)][column]
             
-            # Replace outliers with random values from non-outliers
             df_copy[column] = np.where((df_copy[column] < lower_bound) | (df_copy[column] > upper_bound),
                                          np.random.choice(non_outliers, size=df_copy[column].shape[0]),
                                          df_copy[column])
@@ -231,7 +214,6 @@ def fill_outliers_with_values(df, fill_values):
 
     df_copy = df.copy()
     
-    # Select only numeric columns
     numeric_columns = df_copy.select_dtypes(include=['number']).columns
     
     for column in numeric_columns:
@@ -242,7 +224,6 @@ def fill_outliers_with_values(df, fill_values):
             lower_bound = Q1 - 1.5 * IQR
             upper_bound = Q3 + 1.5 * IQR
             
-            # Replace outliers with specified values from the dictionary
             fill_value = fill_values[column]
             df_copy[column] = np.where((df_copy[column] < lower_bound) | (df_copy[column] > upper_bound), fill_value, df_copy[column])
     
@@ -253,30 +234,20 @@ def fill_outliers_with_values(df, fill_values):
 def remove_rows_with_outliers(df, count=1):
     """Keep only rows with fewer than the specified number of outliers based on the Interquartile Range (IQR) method, considering only numeric columns."""
 
-    # Select only numeric columns
     numeric_df = df.select_dtypes(include=['number'])
     
-    # Calculate Q1 (25th percentile) and Q3 (75th percentile) for numeric columns
     Q1 = numeric_df.quantile(0.25)
     Q3 = numeric_df.quantile(0.75)
     
-    # Calculate IQR
     IQR = Q3 - Q1
     
-    # Determine the lower and upper bounds for outliers
     lower_bound = Q1 - 1.5 * IQR
     upper_bound = Q3 + 1.5 * IQR
     
-    # Create a boolean mask for outliers in numeric columns
     outlier_mask = (numeric_df < lower_bound) | (numeric_df > upper_bound)
     
-    # Count the number of outliers in each row based on numeric columns
     outlier_counts = outlier_mask.sum(axis=1)
     
-    # Filter the original DataFrame to keep only rows with fewer than the specified number of outliers
     df_kept = df[outlier_counts < count]
     
     return df_kept
-
-
-
