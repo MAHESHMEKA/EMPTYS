@@ -13,5 +13,3 @@ EMPTYS is a comprehensive data preprocessing library designed to handle various 
 ## Installation
 
 You can install the `emptys` package via pip:
-
-pip install emptys 
